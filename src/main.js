@@ -3,11 +3,11 @@ import { authenticationController,  messageController,  userController } from ".
 import { globalErrorHandling } from "./middleware/error.middleware.js";
 import { port } from "./config.js";
 import { bootstrapDB } from "./DB/connection.db.js";
-import { decryption, encryption } from "./common/security/index.js";
+import cors from 'cors'
 
 const app = express();
 
-app.use(express.json());
+app.use(cors(),express.json());
 bootstrapDB(app,port)
 
 
