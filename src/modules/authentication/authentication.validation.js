@@ -1,22 +1,34 @@
 import { z } from "zod";
+import { genderEnum } from "../../common/enum/user.enum.js";
+import { generalValidationFileds } from "../../common/validation.js";
 
-export const login = z.object({
-  email: z.email(),
-  password: z.string().min(8).max(16),
+export const loginSchema =(lang)=>{
+  return  z.object({
+  email: generalValidationFileds.email(lang),
+  password: generalValidationFileds.password(lang),
+});
+}
+export const login =(lang)=>{
+  return  z.object({
+  body: loginSchema(lang),
+  query: z.strictObject({
+
+    darkMood: z.stringbool().optional(),
+  }),
 });
 
-export const signup = login
-  .safeExtend({
-    userName: z.string(),
-    confirmPassword: z.string().min(8).max(16),
-    phone: z.e164(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.password != data.confirmPassword) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["confirmPassword"],
-        message: "password mismatch confirm password",
-      });
-    }
-  });
+}
+export const signup = (lang)=>{
+  return z.object({
+  body: loginSchema(lang)
+    .safeExtend({
+      userName: generalValidationFileds.userName(lang),
+      confirmPassword: generalValidationFileds.password(lang),
+      phone:generalValidationFileds.phone(lang),
+      gender:generalValidationFileds.gender(lang)
+    })
+    .superRefine((data, ctx) => {
+    generalValidationFileds.matchFields({original:"password",copy:"confirmPassword",data,ctx,lang})
+    }),
+});
+}

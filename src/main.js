@@ -4,13 +4,12 @@ import { globalErrorHandling } from "./middleware/error.middleware.js";
 import { port } from "./config.js";
 import { bootstrapDB } from "./DB/connection.db.js";
 import cors from 'cors'
+import { client } from "./DB/redis.connection.js";
 
 const app = express();
 
 app.use(cors(),express.json());
-bootstrapDB(app,port)
-
-
+await bootstrapDB(app,port)
 
 
 app.use("/auth", authenticationController);

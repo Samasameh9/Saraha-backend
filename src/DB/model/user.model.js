@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema(
     coverImage: [String],
     confirmEmail: { type: Boolean, default: false },
     phone: String,
+    changeCredentialsTime:Date,
     gender: {
       type: Number,
       Enum: Object.values(genderEnum),
@@ -31,6 +32,7 @@ const userSchema = new mongoose.Schema(
       default: providerEnum.SYSTEM,
       enum: Object.values(providerEnum),
     },
+    
   },
   {
     timestamps: true,

@@ -10,6 +10,7 @@ import {
 import {
   BadRequestException,
   NotFoundException,
+  UnauthorizedException,
 } from "../exception/error.exception.js";
 import { findById, findOne } from "../repository/base.repository.js";
 import { UserModel } from "../../DB/model/user.model.js";
@@ -17,6 +18,21 @@ import { tokenTypeEnum } from "../enum/security.enum.js";
 import { roleEnum } from "../enum/user.enum.js";
 import { compare } from "bcrypt";
 import { decryption } from "./encryption.security.js";
+import { randomUUID } from "node:crypto";
+import { exists, set } from "../services/index.js";
+
+
+export const userBaseKey =  ({ userId }) => {
+  return `User::${userId.toString()}`;
+};
+
+export const userBaseRevokeTokenKey =  ({ userId }) => {
+  return `${userBaseKey({userId})}::revokeToken`;
+};
+
+export const userRevokeTokenKey =  ({ userId, jti }) => {
+  return `${userBaseRevokeTokenKey({userId})}::${jti}`;
+};
 
 export const createToken = async ({
   payload = {},
@@ -73,7 +89,7 @@ export const decodeToken = async ({
   console.log(decoded);
 
   if (!decoded?.aud?.length) {
-    throw BadRequestException("missing token payload");
+    throw BadRequestException({ messsage: "missing token payload" });
   }
 
   const payload = await verifyToken({
@@ -81,11 +97,18 @@ export const decodeToken = async ({
     secret: await getSignature({ tokenType, role: decoded.aud[0] }),
   });
   if (!payload?.sub) {
-    throw BadRequestException("missing token payload");
+    throw BadRequestException({ message: "missing token payload" });
+  }
+  if (await exists({key: userRevokeTokenKey({ userId: payload.sub, jti: payload.jti })})) {
+    throw UnauthorizedException({ message: "expired login credentials" });
   }
   const user = await findById({ model: UserModel, id: payload.sub });
   if (!user) {
-    throw NotFoundException("invalid user");
+    throw NotFoundException({ message: "invalid user" });
+  }
+  if((user.changeCredentialsTime?.getTime() ?? 0 )> payload.iat * 1000){
+    throw UnauthorizedException({ message: "expired login credentials" });
+
   }
   return { user, payload };
 };
@@ -96,8 +119,8 @@ export const createLoginCredentials = async ({
   issuer,
 }) => {
   console.log(user.role);
-console.log(issuer);
-
+  console.log(issuer);
+  const jwtid = randomUUID();
   const { accessSignature, refreshSignature } = await getTokenSignature({
     role: user.role,
   });
@@ -109,6 +132,7 @@ console.log(issuer);
       issuer,
       audience: [user.role],
       expiresIn: ACCESS_TOKEN_EXPIREIN,
+      jwtid,
     },
   });
   const refresh_token = await createToken({
@@ -119,6 +143,7 @@ console.log(issuer);
       issuer,
       audience: [user?.role],
       expiresIn: REFRESH_TOKEN_EXPIREIN,
+      jwtid,
     },
   });
   console.log({ access_token, refresh_token });
@@ -126,8 +151,22 @@ console.log(issuer);
   return { access_token, refresh_token };
 };
 
+export const createRevokeToken = async ({ payload }) => {
+  const consumedTime = (Math.ceil(Date.now() / 1000)) - payload?.iat;
+  const refreshExpiresIn = payload?.iat + REFRESH_TOKEN_EXPIREIN;
+  const ttl = refreshExpiresIn - consumedTime;
+  console.log({ consumedTime, refreshExpiresIn, ttl });
+  console.log(userRevokeTokenKey({ userId: payload.sub, jti: payload.jti }));
+  
+  await set({
+    key: userRevokeTokenKey({ userId: payload.sub, jti: payload.jti }),
+    value: payload.jti,
+    ttl,
+  });
+  return;
+};
 
-export const basicAuth= async ({ email, password }) => {
+export const basicAuth = async ({ email, password }) => {
   const account = await findOne({ model: UserModel, filter: { email } });
   if (!account) {
     throw NotFoundException({ message: "Invalid email or password" });
@@ -138,5 +177,5 @@ export const basicAuth= async ({ email, password }) => {
   }
   account.phone = await decryption(account.phone);
 
- return account
-}
+  return account;
+};

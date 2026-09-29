@@ -7,9 +7,9 @@ export const authentication = (tokenType = tokenTypeEnum.ACCESS) => {
     const { authorization } = req.headers;
 
     if (!authorization) {
-      throw UnauthorizedException("unauthorization account");
+      throw UnauthorizedException({message:"unauthorization account"});
     }
-    const [key, credentials] = authorization.split(" ") || [];
+    const [key, credentials] = authorization?.split(" ") || [];
     switch (key) {
       case "Basic":
         const [email,password]=Buffer.from(credentials,"base64").toString().split(":")  
@@ -37,7 +37,7 @@ export const authorization=(accessRole)=>{
   return async (req, res, next) => {
    
     if (req.user.role < accessRole) {
-      throw ForbiddenException("Forbidden account");
+      throw ForbiddenException({message:"Forbidden account"});
     }
 
 
