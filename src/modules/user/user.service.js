@@ -8,16 +8,25 @@ import {
 } from "../../common/security/token.security.js";
 import { ACCESS_TOKEN_EXPIREIN, REFRESH_TOKEN_EXPIREIN } from "../../config.js";
 import { ConflictException } from "../../common/exception/error.exception.js";
-import { del, keys, set } from "../../common/services/index.js";
+import { del, get, keys, set } from "../../common/services/index.js";
 import { logoutEnum } from "../../common/enum/security.enum.js";
 
-
 export const clearProfileCache = async (userId) => {
-  return await del({key: userBaseKey({ userId })});
+  return await del({ key: userBaseKey({ userId }) });
 };
 
 export const profile = async (account) => {
-  await set({key:userBaseKey({userId:account._id}),value:account,ttl:300})
+  const cachedProfile = await get({
+    key: userBaseKey({ userId: account._id }),
+  });
+  if (cachedProfile) {
+    return cachedProfile;
+  }
+  await set({
+    key: userBaseKey({ userId: account._id }),
+    value: account,
+    ttl: 300,
+  });
   return account;
 };
 
@@ -27,7 +36,7 @@ export const update = async (user, data) => {
     update: data,
     id: user._id,
   });
-  await clearProfileCache(user._id)
+  await clearProfileCache(user._id);
   return account;
 };
 
