@@ -4,7 +4,7 @@ import { globalErrorHandling } from "./middleware/error.middleware.js";
 import { port } from "./config.js";
 import { bootstrapDB } from "./DB/connection.db.js";
 import cors from 'cors'
-import { client } from "./DB/redis.connection.js";
+
 
 const app = express();
 
@@ -12,6 +12,7 @@ app.use(cors(),express.json());
 await bootstrapDB(app,port)
 
 
+app.use("/assets",express.static("./assets"))
 app.use("/auth", authenticationController);
 app.use("/message", messageController);
 app.use("/user", userController);

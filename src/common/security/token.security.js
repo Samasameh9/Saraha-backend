@@ -25,6 +25,9 @@ import { exists, set } from "../services/index.js";
 export const userBaseKey =  ({ userId }) => {
   return `User::${userId.toString()}`;
 };
+export const userEmailBaseKey =  ({ email }) => {
+  return `User::${email}`;
+};
 
 export const userBaseRevokeTokenKey =  ({ userId }) => {
   return `${userBaseKey({userId})}::revokeToken`;

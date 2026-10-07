@@ -14,9 +14,10 @@ const userSchema = new mongoose.Schema(
     DOB: { type: Date },
     image: String,
     coverImage: [String],
-    confirmEmail: { type: Boolean, default: false },
+    confirmEmail: { type: Date},
     phone: String,
     changeCredentialsTime:Date,
+    twoStepVerification:{type:Boolean,default:false},
     gender: {
       type: Number,
       Enum: Object.values(genderEnum),

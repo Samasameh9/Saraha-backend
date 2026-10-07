@@ -25,6 +25,18 @@ export const BadRequestException = ({
     });
 };
 
+export const TooManyRequestException = ({
+    message = "Too Many Request Exception",
+    extra = undefined
+} = {}) => {
+
+    return ErrorResponse({
+        message,
+        status: 429,
+        extra
+    });
+};
+
 
 export const ConflictException = ({
     message = "ConflictException",

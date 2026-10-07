@@ -45,6 +45,7 @@ export const generalValidationFileds = {
             : "maximum length of username is 30",
       }),
   phone: (lang) => z.e164(),
+  otp:(lang)=>z.string().regex(/^\d{6}$/,{error:"invalid code"}),
   gender: (lang) =>
     z.union([z.literal(genderEnum.Male), z.literal(genderEnum.Female)]),
   matchFields,
