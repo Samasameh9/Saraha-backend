@@ -283,11 +283,13 @@ export const verifyTwoStepVerification = async ({ email, otp }) => {
     });
   }
 
+  const otpKey = userEmailKey({
+    email,
+    subject: emailSubjectEnum.TWO_STEP_VERIFICATION,
+  });
+
   const hashOtp = await get({
-    key: userEmailKey({
-      email,
-      subject: emailSubjectEnum.TWO_STEP_VERIFICATION,
-    }),
+    key: otpKey,
   });
 
   if (!hashOtp || !(await compare(otp, hashOtp))) {
@@ -297,16 +299,12 @@ export const verifyTwoStepVerification = async ({ email, otp }) => {
   }
 
   account.twoStepVerification = true;
-
   await account.save();
-
   await del({
-    key: userEmailKey({
-      email,
-      subject: emailSubjectEnum.TWO_STEP_VERIFICATION,
+    key: await keys({
+      prefix: otpKey,
     }),
   });
-
   return {
     message: "Two-step verification enabled successfully",
   };
@@ -331,6 +329,7 @@ export const confirmLogin = async ({ email, otp }, issuer) => {
     email,
     subject: emailSubjectEnum.TWO_STEP_VERIFICATION,
   });
+
   const hashOtp = await get({
     key: otpKey,
   });
@@ -340,7 +339,9 @@ export const confirmLogin = async ({ email, otp }, issuer) => {
     });
   }
   await del({
-    key: otpKey,
+    key: await keys({
+      prefix: otpKey,
+    }),
   });
   account.phone = await decryption(account.phone);
   return await createLoginCredentials({
