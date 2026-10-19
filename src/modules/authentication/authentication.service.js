@@ -6,7 +6,7 @@ import {
   NotFoundException,
   TooManyRequestException,
 } from "../../common/exception/error.exception.js";
-import { create, findOne } from "../../common/repository/index.js";
+import { create, findOne } from "../../common/repository/base.repository.js";
 import {
   compare,
   createLoginCredentials,
@@ -351,16 +351,6 @@ export const confirmLogin = async ({ email, otp }, issuer) => {
 };
 
 export const login = async ({ email, password }, issuer) => {
-  const attemptsKey = userEmailBaseKey({ email });
-  const blockUser = async () => {
-    const trials = await incrBy({ key: attemptsKey });
-    if (trials >= 5) {
-      await expire({ key: attemptsKey, ttl: 300 });
-      throw ForbiddenException({
-        message: "Account blocked try after 5 minutes",
-      });
-    }
-  };
   const account = await findOne({
     model: UserModel,
     filter: {
@@ -369,33 +359,32 @@ export const login = async ({ email, password }, issuer) => {
       confirmEmail: { $exists: true },
     },
   });
-  const currentTrials = await get({ key: attemptsKey });
-  if (Number(currentTrials) >= 5) {
-    throw ForbiddenException({
-      message: "Account temporarily blocked. Try again after 5 minutes",
+
+  if (!account) {
+    throw NotFoundException({
+      message: "Invalid email or password",
     });
   }
-  if (!account) {
-    await blockUser();
-    throw NotFoundException({ message: "Invalid email or password" });
-  }
+
   const match = await compare(password, account.password);
+
   if (!match) {
-    await blockUser();
-    throw NotFoundException({ message: "Invalid email or password" });
+    throw NotFoundException({
+      message: "Invalid email or password",
+    });
   }
-  await del({ key: attemptsKey });
+
   if (account.twoStepVerification) {
     await sendEmailOtp({
       email,
       subject: emailSubjectEnum.TWO_STEP_VERIFICATION,
     });
-
-    return {
-      twoStepRequired: true,
-    };
+    return { twoStepRequired: true };
   }
   account.phone = await decryption(account.phone);
 
-  return await createLoginCredentials({ user: account, issuer });
+  return await createLoginCredentials({
+    user: account,
+    issuer,
+  });
 };

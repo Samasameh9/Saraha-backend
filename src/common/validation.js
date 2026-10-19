@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { genderEnum } from "./enum/user.enum.js";
 import { languageEnum } from "./enum/security.enum.js";
+import mongoose from "mongoose";
 
 const matchFields = ({ original, copy, data, ctx, lang }) => {
   if (data[original] != data[copy]) {
@@ -45,8 +46,25 @@ export const generalValidationFileds = {
             : "maximum length of username is 30",
       }),
   phone: (lang) => z.e164(),
-  otp:(lang)=>z.string().regex(/^\d{6}$/,{error:"invalid code"}),
+  matchFields,
+  otp: (lang) => z.string().regex(/^\d{6}$/, { error: "invalid code" }),
   gender: (lang) =>
     z.union([z.literal(genderEnum.Male), z.literal(genderEnum.Female)]),
-  matchFields,
+  id: (lang) =>
+    z.string().refine(
+      (data) => {
+        return mongoose.Types.ObjectId.isValid(data);
+      },
+      { message: "invalid format" },
+    ),
+  file: (lang) =>
+    z.strictObject({
+      fieldname: z.string(),
+      originalname: z.string(),
+      encoding: z.string(),
+      mimetype: z.string(),
+      buffer: z.instanceof(Buffer),
+      size: z.number(),
+      path: z.string(),
+    }),
 };

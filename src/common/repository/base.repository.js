@@ -36,6 +36,9 @@ export const find = async ({ filter, options, select, model } = {}) => {
   if (options?.lean) {
     doc.lean(options.lean);
   }
+  if (options?.sort) {
+    doc.sort(options.sort);
+  }
   return await doc.exec();
 };
 export const paginate = async ({
@@ -45,6 +48,7 @@ export const paginate = async ({
   page = "all",
   size = 5,
   model,
+  sort,
 } = {}) => {
   let docsCount = undefined;
   let pages = undefined;
@@ -55,6 +59,9 @@ export const paginate = async ({
 
     docsCount = await model.countDocuments(filter);
     pages = Math.ceil(docsCount / options.limit);
+  }
+  if (sort) {
+    options.sort = sort;
   }
   const result = await find({ model, filter, select, options });
   return {
@@ -104,27 +111,22 @@ export const findOneAndUpdate = async ({
   if (Array.isArray(update)) {
     update.push({
       $set: {
-        __v: { $add: ["$__v", 1] },
+        __v: { $add: [{ $ifNull: ["$__v", 0] }, 1] },
       },
     });
+
     return await model.findOneAndUpdate(filter || {}, update, {
       new: true,
       runValidators: true,
-
       ...options,
       updatePipeline: true,
     });
   }
-  return await model.findOneAndUpdate(
-    filter || {},
-    { ...update, $inc: { __v: 1 } },
-    {
-      new: true,
-      runValidators: true,
-
-      ...options,
-    },
-  );
+  return await model.findOneAndUpdate(filter || {}, update, {
+    new: true,
+    runValidators: true,
+    ...options,
+  });
 };
 
 export const findByIdAndUpdate = async ({

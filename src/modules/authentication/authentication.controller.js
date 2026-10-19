@@ -15,6 +15,8 @@ import {
 import { successResponse } from "../../common/utils/success.response.js";
 import * as validator from "./authentication.validation.js";
 import { validation } from "../../middleware/validation.middleware.js";
+import { del } from "../../common/services/cash.service.js";
+import { generateLimiter } from "../../common/utils/limiter.js";
 const router = Router();
 
 router.post("/signup", validation(validator.signup), async (req, res, next) => {
@@ -104,10 +106,24 @@ router.post("/signup-with-gmail ", async (req, res, next) => {
   );
   return successResponse({ res, status, data });
 });
-
-router.post("/signin", validation(validator.login), async (req, res, next) => {
-  const data = await login(req.validate.body, `${req.protocol}://${req.host}`);
-  return successResponse({ res, data });
+const loginLimiter = generateLimiter({
+  limit: 4,
+  ttl: 300,
+  skipSuccessfulRequests: true,
+  message: "Account blocked try after 5 minutes",
 });
+router.post(
+  "/signin",
+  loginLimiter,
+  validation(validator.login),
+  async (req, res, next) => {
+    const data = await login(
+      req.validate.body,
+      `${req.protocol}://${req.host}`,
+    );
+    await del({ key: req.rateLimit.key });
+    return successResponse({ res, data });
+  },
+);
 
 export default router;

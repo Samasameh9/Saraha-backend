@@ -45,7 +45,7 @@ export const saveFile = async ({ customPath = "general", file, result }) => {
 
   await writeFile(resolve(`./${uniqueFilePath}`), file.buffer);
 
-  file.finalPath = uniqueFilePath;
+  file.path = uniqueFilePath;
 
   return file;
 };
