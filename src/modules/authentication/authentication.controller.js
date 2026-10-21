@@ -99,7 +99,7 @@ router.patch(
   },
 );
 
-router.post("/signup-with-gmail ", async (req, res, next) => {
+router.post("/signup-with-gmail", async (req, res, next) => {
   const { status, data } = await signupWithGmail(
     req.body,
     `${req.protocol}://${req.host}`,

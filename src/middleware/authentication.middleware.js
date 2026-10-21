@@ -30,7 +30,7 @@ export const authentication = (tokenType = tokenTypeEnum.ACCESS) => {
         const [email, password] = Buffer.from(credentials, "base64")
           .toString()
           .split(":");
-        console.log({ email, password });
+       
         req.user = basicAuth({ email, password });
         break;
       case "Bearer":

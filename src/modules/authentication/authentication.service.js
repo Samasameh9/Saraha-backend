@@ -2,7 +2,6 @@ import { providerEnum } from "../../common/enum/user.enum.js";
 import {
   BadRequestException,
   ConflictException,
-  ForbiddenException,
   NotFoundException,
   TooManyRequestException,
 } from "../../common/exception/error.exception.js";
@@ -14,7 +13,6 @@ import {
   encryption,
   hash,
   userBaseRevokeTokenKey,
-  userEmailBaseKey,
 } from "../../common/security/index.js";
 import { WEB_CLIENT_IDS } from "../../config.js";
 import { UserModel } from "../../DB/model/user.model.js";
@@ -39,19 +37,19 @@ import {
 const client = new OAuth2Client();
 async function verifyGoogleAccount(idToken) {
   const ticket = await client.verifyIdToken({
-    idToken: token,
+    idToken,
     audience: WEB_CLIENT_IDS,
   });
   const payload = ticket.getPayload();
   if (!payload.email_verified) {
-    throw BadRequestException({ message: "email not verified" });
+    throw BadRequestException({ message: "Email not verified" });
   }
   return payload;
 }
 
 export const signupWithGmail = async ({ idToken }, issuer) => {
   const { email, name, picture } = await verifyGoogleAccount(idToken);
-  console.log({ email, name, picture });
+ 
   const existAccount = await findOne({ model: UserModel, filter: { email } });
   if (existAccount) {
     if (existAccount.provider != providerEnum.GOOGLE) {

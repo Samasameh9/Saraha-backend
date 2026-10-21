@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { genderEnum } from "../../common/enum/user.enum.js";
 import { generalValidationFileds } from "../../common/validation.js";
 
 export const loginSchema = (lang) => {

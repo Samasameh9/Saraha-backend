@@ -1,3 +1,5 @@
+import { NODE_ENV } from "../config.js";
+
 export const globalErrorHandling = (error, req, res, next) => {
     const status = error.cause?.status ?? 500;
 
@@ -9,6 +11,7 @@ export const globalErrorHandling = (error, req, res, next) => {
             ...(error.cause?.extra && {
                 issues: error.cause.extra
             })
-        }
+        },
+        stack:NODE_ENV=="production"?undefined:error.stack
     });
 };

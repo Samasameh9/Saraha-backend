@@ -43,8 +43,7 @@ export const generateLimiter = ({
     store: {
       async incr(key, cb) {
         try {
-          console.log("Rate-limit key:", key);
-
+         
           const count = await client.incr(key);
 
           if (count === 1) {

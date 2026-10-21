@@ -48,8 +48,6 @@ export async function sendEmail({
       attachments,
     });
 
-    console.log("Message sent: %s", info.messageId);
-    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
   } catch (err) {
     console.log(err);
 

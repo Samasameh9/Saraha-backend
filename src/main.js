@@ -11,13 +11,14 @@ import cors from "cors";
 import helmet from "helmet";
 import { conversationController } from "./modules/conversation/index.js";
 import { generateLimiter } from "./common/utils/limiter.js";
+import morgan from "morgan";
 
 const app = express();
 
 
 const limiter=generateLimiter()
 app.set("trust proxy", true);
-app.use(helmet(), cors(), limiter, express.json());
+app.use(helmet(), cors(), morgan("common"),limiter, express.json());
 await bootstrapDB(app, port);
 
 app.use("/assets", express.static("./assets"));

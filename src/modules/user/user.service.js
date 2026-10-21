@@ -58,13 +58,7 @@ export const logout = async (payload, user, { action = logoutEnum.DEVICE }) => {
     case logoutEnum.ALL:
       user.changeCredentialsTime = new Date();
       await user.save();
-      console.log({
-        k: await keys({
-          prefix: userBaseRevokeTokenKey({
-            userId: payload.sub,
-          }),
-        }),
-      });
+  
       await del({
         key: await keys({
           prefix: userBaseRevokeTokenKey({

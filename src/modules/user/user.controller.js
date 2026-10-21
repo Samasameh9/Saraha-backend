@@ -30,7 +30,6 @@ router.patch(
   }),
   async (req, res, next) => {
     req.user.image = req.file.finalPath;
-    console.log(req.file.finalPath);
 
     await req.user.save();
     return successResponse({ res, data: { user: req.user } });

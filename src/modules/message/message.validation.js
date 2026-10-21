@@ -12,8 +12,6 @@ export const createMessage = (lang) => {
       files: z.array(generalValidationFileds.file(lang)).max(3).optional(),
     })
     .superRefine((data, ctx) => {
-      console.log(data);
-
       if (!data.body.content && !data.files?.length) {
         ctx.addIssue({
           code: "custom",

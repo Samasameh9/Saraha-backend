@@ -89,7 +89,7 @@ export const decodeToken = async ({
   tokenType = tokenTypeEnum.ACCESS,
 } = {}) => {
   const decoded = jwt.decode(authorization);
-  console.log(decoded);
+
 
   if (!decoded?.aud?.length) {
     throw BadRequestException({ messsage: "missing token payload" });
@@ -121,8 +121,7 @@ export const createLoginCredentials = async ({
   options = {},
   issuer,
 }) => {
-  console.log(user.role);
-  console.log(issuer);
+
   const jwtid = randomUUID();
   const { accessSignature, refreshSignature } = await getTokenSignature({
     role: user.role,
@@ -149,8 +148,7 @@ export const createLoginCredentials = async ({
       jwtid,
     },
   });
-  console.log({ access_token, refresh_token });
-
+ 
   return { access_token, refresh_token };
 };
 
@@ -158,8 +156,6 @@ export const createRevokeToken = async ({ payload }) => {
   const consumedTime = (Math.ceil(Date.now() / 1000)) - payload?.iat;
   const refreshExpiresIn = payload?.iat + REFRESH_TOKEN_EXPIREIN;
   const ttl = refreshExpiresIn - consumedTime;
-  console.log({ consumedTime, refreshExpiresIn, ttl });
-  console.log(userRevokeTokenKey({ userId: payload.sub, jti: payload.jti }));
   
   await set({
     key: userRevokeTokenKey({ userId: payload.sub, jti: payload.jti }),
